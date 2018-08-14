@@ -13,9 +13,55 @@
   },
   "scripts": {
     "start": "react-app-rewired start --scripts-version react-scripts-ts",
-    "build": "react-app-rewired build --scripts-version react-scripts-ts",
-    "test": "react-app-rewired test --env=jsdom --scripts-version react-scripts-ts"
+    "test": "jest --config .jest.js",
+    "test-node": "jest --config .jest.node.js",
+    "test-all": "./scripts/test-all.sh",
+    "lint": "npm run lint:ts && npm run lint:es && npm run lint:demo && npm run lint:style",
+    "lint:ts": "npm run tsc && antd-tools run ts-lint",
+    "lint:es": "eslint tests site scripts components ./.*.js ./webpack.config.js --ext '.js,.jsx'",
+    "lint:demo": "cross-env RUN_ENV=DEMO eslint components/*/demo/*.md --ext '.md'",
+    "lint:style": "stylelint \"{site,components}/**/*.less\" --syntax less",
+    "lint-fix:ts": "npm run tsc && antd-tools run ts-lint-fix",
+    "lint-fix": "npm run lint-fix:code && npm run lint-fix:demo",
+    "lint-fix:code": "eslint --fix tests site scripts components ./.*.js ./webpack.config.js --ext '.js,.jsx'",
+    "lint-fix:demo": "eslint-tinker ./components/*/demo/*.md",
+    "sort-api": "node ./scripts/sort-api-table.js",
+    "dist": "antd-tools run dist",
+    "compile": "antd-tools run compile",
+    "tsc": "tsc",
+    "start:preact": "node ./scripts/generateColorLess.js && cross-env NODE_ENV=development REACT_ENV=preact bisheng start -c ./site/bisheng.config.js",
+    "site": "cross-env NODE_ENV=production bisheng build --ssr -c ./site/bisheng.config.js && node ./scripts/generateColorLess.js",
+    "predeploy": "antd-tools run clean && npm run site && cp netlify.toml _site && cp -r .circleci _site",
+    "deploy": "bisheng gh-pages --push-only",
+    "pub": "antd-tools run pub",
+    "prepublish": "antd-tools run guard",
+    "pre-publish": "npm run test-all && node ./scripts/prepub",
+    "authors": "git log --format='%aN <%aE>' | sort -u | grep -v 'users.noreply.github.com' | grep -v 'gitter.im' | grep -v '.local>' | grep -v 'alibaba-inc.com' | grep -v 'alipay.com' | grep -v 'taobao.com' > AUTHORS.txt",
+    "lint-staged": "lint-staged",
+    "lint-staged:ts": "tsc && node node_modules/tslint/bin/tslint",
+    "lint-staged:es": "eslint ./.*.js ./webpack.config.js",
+    "lint-staged:demo": "cross-env RUN_ENV=DEMO eslint --ext '.md'"
   },
+  "lint-staged": {
+    "components/**/*.tsx": [
+      "npm run lint-staged:ts"
+    ],
+    "{tests,site,scripts,components}/**/*.{js,jsx}": [
+      "npm run lint-staged:es"
+    ],
+    "{site,components}/**/*.less": "stylelint --syntax less",
+    "components/*/demo/*.md": [
+      "npm run lint-staged:demo"
+    ]
+  },
+  "pre-commit": [
+    "lint-staged"
+  ],
+  "sideEffects": [
+    "dist/*",
+    "es/**/style/*",
+    "lib/**/style/*"
+  ],
   "devDependencies": {
     "@types/jest": "^23.3.1",
     "@types/node": "^10.7.0",
