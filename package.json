@@ -2,6 +2,7 @@
   "name": "ins-ant-design",
   "version": "0.1.0",
   "private": true,
+  "main": "./src/index",
   "dependencies": {
     "antd": "^3.8.1",
     "less": "^3.8.1",
