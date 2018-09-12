@@ -1,7 +1,7 @@
 import * as React from 'react';
 // import { Form, Input, InputNumber, Radio, Checkbox, Select, DatePicker, Switch, TreeSelect } from 'antd';
 import { Form, Input, Row, Col } from 'antd';
-import emitter from '../listener/Events';
+// import emitter from '../listener/Events';
 
 /* 
   表单项参数接口
@@ -27,78 +27,108 @@ interface DefaultFormProps {
 
 // const RadioGroup = Radio.Group;
 
-class InsForm extends React.Component<any, any> {
+export default class InsForm {
+  public ReactCom: any;
+  public view: any;
+  private config: DefaultFormProps;
 
-  static defaultFormProps: DefaultFormProps = {
-    columnSize: 1,
-    fields: [],
-    gutter: {sm: 24}
-  };
-
-  static defaultFieldProps: DefaultFieldProps = {
-    name: null,
-    text: null,
-    component: <Input />
-  };
-
-  componentDidMount() {
-    this.props.getChild(this);
-    emitter.on('getSelf', (callBack) => {
-      callBack(this);
-    });
+  static getInit(config: DefaultFormProps) {
+    const upload = new InsForm(config);
+    return upload;
   }
-  
-  getState() {
-    console.log(this);
-    return this.props.form.getFieldsValue();
+  constructor(config: DefaultFormProps) {
+    this.config = config;
+
+    this.getReactCom();
   }
 
   getForm() {
-    return this.props.form;
+    return this.view.getForm();
   }
 
-  getColLayout(columnSize: number, span: number) {
-    return {
-      lg: span || (24 / columnSize),
-      sm: 24
-    };
-  }
+  getReactCom() {
+    const me = this;
+    class ReactCom extends React.Component<any, any> {
 
-  render() {
-    // const { getFieldDecorator, getFieldsError, getFieldError, isFieldTouched } = this.props.form;
-    const { getFieldDecorator } = this.props.form;
-    const FormItem = Form.Item;
-    const formProps = { ...InsForm.defaultFormProps, ...this.props };
+      static defaultFormProps: DefaultFormProps = {
+        columnSize: 1,
+        fields: [],
+        gutter: { sm: 24 }
+      };
 
-    let formFields = [];
+      static defaultFieldProps: DefaultFieldProps = {
+        name: null,
+        text: null,
+        component: <Input />
+      };
 
-    for (let m = 0; m < formProps.fields.length; m++) {
-      let field = { ...InsForm.defaultFieldProps, ...formProps.fields[m] };
+      constructor(props: any) {
+        super(props);
+        me.view = this;
+        console.log('constructor', props, this, me);
+      }
 
-      formFields.push((
-        <Col {...this.getColLayout(formProps.columnSize, field.span)}>
-          <FormItem label={field.text}>
-            {getFieldDecorator(field.name, { ...field })(field.component)}
-          </FormItem>
-        </Col>
-      ));
+      componentDidMount() {
+        // console.log(this.props);
+        // this.props.getChild(this);
+        // emitter.on('getSelf', (callBack) => {
+        //   callBack(this);
+        // });
+      }
 
+      getState() {
+        console.log(this);
+        return this.props.form.getFieldsValue();
+      }
+
+      getForm() {
+        return this.props.form;
+      }
+
+      getColLayout(columnSize: number, span: number) {
+        return {
+          lg: span || (24 / columnSize),
+          sm: 24
+        };
+      }
+
+      render() {
+        // const { getFieldDecorator, getFieldsError, getFieldError, isFieldTouched } = this.props.form;
+        const { getFieldDecorator } = this.props.form;
+        const FormItem = Form.Item;
+        const formProps = { ...ReactCom.defaultFormProps, ...me.config };
+
+        let formFields = [];
+
+        for (let m = 0; m < formProps.fields.length; m++) {
+          let field = { ...ReactCom.defaultFieldProps, ...formProps.fields[m] };
+
+          formFields.push((
+            <Col {...this.getColLayout(formProps.columnSize, field.span)}>
+              <FormItem label={field.text}>
+                {getFieldDecorator(field.name, { ...field })(field.component)}
+              </FormItem>
+            </Col>
+          ));
+
+        }
+
+        const form = (
+          <Form>
+            <Row gutter={...formProps.gutter}>
+              {formFields}
+            </Row>
+
+            <button onClick={() => { this.getState(); }}>组件内部输出</button>
+          </Form>
+        );
+
+        return form;
+      }
     }
-
-    const form = (
-      <Form>
-        <Row gutter={...formProps.gutter}>
-          {formFields}
-        </Row>
-
-        <button onClick={() => {this.getState(); }}>组件内部输出</button>
-      </Form>
-    );
-
-    return form;
+    const WrappedInsForm = Form.create()(ReactCom);
+    this.ReactCom = WrappedInsForm;
+    return ReactCom;
   }
+
 }
-
-const WrappedInsForm = Form.create()(InsForm);
-
-export default WrappedInsForm;
